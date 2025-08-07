@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}InvestSmart - Optimisation des Investissements{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-industry"></i> InvestSmart
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('optimize_investments') }}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-optimize"></i> Optimiser
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Investment Overview -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line"></i> Vue d'ensemble des investissements
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-primary">{{ investments|length }}</h3>
+                            <p class="text-muted">Projets actifs</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-success">{{ "{:,.0f}".format(investments|sum(attribute='total_budget')) }} FC</h3>
+                            <p class="text-muted">Budget total</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-info">{{ "{:.1f}".format((investments|map(attribute='roi_score')|list|sum / investments|length) if investments else 0) }}%</h3>
+                            <p class="text-muted">ROI moyen</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-warning">{{ investments|selectattr('status', 'equalto', 'completed')|list|length }}</h3>
+                            <p class="text-muted">Projets complétés</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Status Distribution -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie"></i> Répartition par statut
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="statusChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar"></i> Répartition par secteur
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="sectorChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Investment Table -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-table"></i> Détails des projets
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Projet</th>
+                                <th>Secteur</th>
+                                <th>Province</th>
+                                <th>Budget</th>
+                                <th>Dépensé</th>
+                                <th>Progression</th>
+                                <th>ROI</th>
+                                <th>Efficacité</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for investment in investments %}
+                            <tr>
+                                <td>
+                                    <strong>{{ investment.project_name }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        Du {{ investment.start_date.strftime('%d/%m/%Y') }} au {{ investment.expected_end_date.strftime('%d/%m/%Y') }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ investment.sector }}</span>
+                                </td>
+                                <td>{{ investment.province }}</td>
+                                <td>
+                                    <span class="text-primary">
+                                        {{ "{:,.0f}".format(investment.total_budget) }} FC
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="text-success">
+                                        {{ "{:,.0f}".format(investment.spent_amount) }} FC
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set progress = (investment.spent_amount / investment.total_budget * 100) if investment.total_budget > 0 else 0 %}
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                             role="progressbar" 
+                                             style="width: {{ progress }}%" 
+                                             aria-valuenow="{{ progress }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ "{:.0f}".format(progress) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if investment.roi_score >= 80 else 'warning' if investment.roi_score >= 60 else 'danger' }}">
+                                        {{ "{:.1f}".format(investment.roi_score) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if investment.efficiency_score >= 80 else 'warning' if investment.efficiency_score >= 60 else 'danger' }}">
+                                        {{ "{:.1f}".format(investment.efficiency_score) }}%
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if investment.status == 'completed' else 'warning' if investment.status == 'in_progress' else 'secondary' }}">
+                                        {% if investment.status == 'completed' %}
+                                            <i class="fas fa-check-circle"></i> Terminé
+                                        {% elif investment.status == 'in_progress' %}
+                                            <i class="fas fa-clock"></i> En cours
+                                        {% elif investment.status == 'planned' %}
+                                            <i class="fas fa-calendar"></i> Planifié
+                                        {% else %}
+                                            {{ investment.status }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="viewDetails({{ investment.id }})">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-active">
+                                <td><strong>TOTAL</strong></td>
+                                <td></td>
+                                <td></td>
+                                <td><strong>{{ "{:,.0f}".format(investments|sum(attribute='total_budget')) }} FC</strong></td>
+                                <td><strong>{{ "{:,.0f}".format(investments|sum(attribute='spent_amount')) }} FC</strong></td>
+                                <td></td>
+                                <td><strong>{{ "{:.1f}".format((investments|map(attribute='roi_score')|list|sum / investments|length) if investments else 0) }}%</strong></td>
+                                <td><strong>{{ "{:.1f}".format((investments|map(attribute='efficiency_score')|list|sum / investments|length) if investments else 0) }}%</strong></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Optimization Panel -->
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-robot"></i> Optimisation IA des investissements
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-brain"></i> Intelligence Artificielle</h6>
+                            <p>L'IA analyse les projets selon des critères multiples: ROI, impact social, faisabilité technique.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-chart-line"></i> Optimisation multi-objectifs</h6>
+                            <p>Algorithme d'optimisation pour maximiser le retour sur investissement et l'impact social.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-crystal-ball"></i> Prédiction</h6>
+                            <p>Modèles prédictifs pour estimer les coûts, délais et risques potentiels.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Status distribution chart
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChartData = {
+    labels: ['Planifié', 'En cours', 'Terminé'],
+    datasets: [{
+        data: [{{ planned_count }}, {{ in_progress_count }}, {{ completed_count }}],
+        backgroundColor: ['#6c757d', '#ffc107', '#28a745']
+    }]
+};
+
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: statusChartData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+// Sector distribution chart
+const sectorCtx = document.getElementById('sectorChart').getContext('2d');
+const sectorChartData = {
+    labels: {{ sector_labels | tojson }},
+    datasets: [{
+        label: 'Budget (FC)',
+        data: {{ sector_values }},
+        backgroundColor: '#1cc88a'
+    }]
+};
+
+new Chart(sectorCtx, {
+    type: 'bar',
+    data: sectorChartData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+function viewDetails(id) {
+    alert('Détails du projet ' + id + ' - Fonctionnalité à implémenter');
+}
+</script>
+{% endblock %}

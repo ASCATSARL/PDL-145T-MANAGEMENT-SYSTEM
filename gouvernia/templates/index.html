@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOUVERNIA - Système IA Gouvernementale RDC</title>
+    <!-- Local development: using HTTP for localhost compatibility -->
+    <link href="http://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-landmark"></i> GOUVERNIA
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">
+                            <i class="fas fa-tachometer-alt"></i> Tableau de bord
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-chart-line"></i> Modules
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('budget') }}">
+                                <i class="fas fa-money-bill-wave"></i> BudgetGuard
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('investments') }}">
+                                <i class="fas fa-industry"></i> InvestSmart
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('transparency') }}">
+                                <i class="fas fa-eye"></i> TranspaFin
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('security') }}">
+                                <i class="fas fa-shield-alt"></i> PeaceNet
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">
+                            <i class="fas fa-sign-in-alt"></i> Connexion
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5">
+        <!-- Hero Section -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+                    <h1 class="display-4">
+                        <i class="fas fa-landmark"></i> GOUVERNIA
+                    </h1>
+                    <p class="lead">Système d'Intelligence Artificielle pour la Gouvernance Transparente en RDC</p>
+                    <hr class="my-4">
+                    <p>Optimisation budgétaire, transparence financière, et sécurité nationale par l'IA.</p>
+                    <a class="btn btn-light btn-lg" href="{{ url_for('login') }}" role="button">
+                        <i class="fas fa-sign-in-alt"></i> Commencer
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="row mb-5">
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-money-bill-wave fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">BudgetGuard</h5>
+                        <p class="card-text">Contrôle budgétaire et détection d'anomalies par IA.</p>
+                        <a href="{{ url_for('budget') }}" class="btn btn-primary">Explorer</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-industry fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">InvestSmart</h5>
+                        <p class="card-text">Optimisation des investissements publics multi-critères.</p>
+                        <a href="{{ url_for('investments') }}" class="btn btn-success">Explorer</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-eye fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">TranspaFin</h5>
+                        <p class="card-text">Transparence financière et traçabilité blockchain.</p>
+                        <a href="{{ url_for('transparency') }}" class="btn btn-info">Explorer</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-shield-alt fa-3x text-warning mb-3"></i>
+                        <h5 class="card-title">PeaceNet</h5>
+                        <p class="card-text">Sécurité et prévention des conflits par analyse prédictive.</p>
+                        <a href="{{ url_for('security') }}" class="btn btn-warning">Explorer</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar"></i> Statistiques du Système
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <h4 class="text-primary">4</h4>
+                                <p class="text-muted">Modules IA</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-success">100%</h4>
+                                <p class="text-muted">Transparence</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-info">24/7</h4>
+                                <p class="text-muted">Monitoring</p>
+                            </div>
+                            <div class="col-md-3">
+                                <h4 class="text-warning">RDC</h4>
+                                <p class="text-muted">Spécialisé</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-light mt-5 py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>&copy; 2024 GOUVERNIA - Système IA Gouvernementale RDC</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>Powered by Intelligence Artificielle</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Local development: using HTTP for localhost compatibility -->
+    <script src="http://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

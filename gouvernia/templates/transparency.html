@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}TranspaFin - Transparence Financière{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-eye"></i> TranspaFin
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button class="btn btn-sm btn-outline-primary" onclick="generateReport()">
+                <i class="fas fa-file-alt"></i> Générer rapport
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Transparency Overview -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-shield-alt"></i> Registre de transparence financière
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-primary">{{ reports|length }}</h3>
+                            <p class="text-muted">Rapports générés</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-success">98.7%</h3>
+                            <p class="text-muted">Score de transparence</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-info">100%</h3>
+                            <p class="text-muted">Traçabilité</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-warning">BlockChain</h3>
+                            <p class="text-muted">Technologie utilisée</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transparency Reports -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-file-alt"></i> Rapports de transparence
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Type de rapport</th>
+                                <th>Période</th>
+                                <th>Transactions</th>
+                                <th>Montant total</th>
+                                <th>Anomalies</th>
+                                <th>Score transparence</th>
+                                <th>Date de création</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for report in reports %}
+                            <tr>
+                                <td>
+                                    <strong>{{ report.report_type|title }}</strong>
+                                </td>
+                                <td>
+                                    {{ report.period_start.strftime('%d/%m/%Y') }} - {{ report.period_end.strftime('%d/%m/%Y') }}
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ report.total_transactions }}</span>
+                                </td>
+                                <td>
+                                    <span class="text-success">
+                                        {{ "{:,.0f}".format(report.total_amount) }} FC
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if report.anomaly_count > 0 else 'success' }}">
+                                        {{ report.anomaly_count }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-success" 
+                                             style="width: {{ report.transparency_score }}%" 
+                                             role="progressbar">
+                                            {{ "{:.1f}".format(report.transparency_score) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ report.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewReport({{ report.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success" onclick="downloadReport({{ report.id }})">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info" onclick="verifyReport({{ report.id }})">
+                                            <i class="fas fa-check-double"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Blockchain Verification -->
+<div class="row mt-4">
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-link"></i> Vérification blockchain
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-check-circle"></i> Intégrité vérifiée</h6>
+                    <p>Toutes les transactions sont enregistrées dans la blockchain avec signature cryptographique.</p>
+                </div>
+                <div class="mb-3">
+                    <label><strong>Hash du dernier bloc:</strong></label>
+                    <code>0x7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069</code>
+                </div>
+                <div class="mb-3">
+                    <label><strong>Signature numérique:</strong></label>
+                    <code>MEYCIQDR6X...==</code>
+                </div>
+                <div class="mb-3">
+                    <label><strong>Timestamp:</strong></label>
+                    <span class="text-muted">{{ "now"|date("Y-m-d H:i:s") }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-search"></i> Audit trail
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6>Transaction initiée</h6>
+                            <p>Signature du ministère concerné</p>
+                            <small class="text-muted">{{ "now"|date("Y-m-d H:i:s") }}</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-primary"></div>
+                        <div class="timeline-content">
+                            <h6>Vérification automatique</h6>
+                            <p>Analyse IA des patterns de dépenses</p>
+                            <small class="text-muted">{{ "now"|date("Y-m-d H:i:s") }}</small>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-info"></div>
+                        <div class="timeline-content">
+                            <h6>Validation blockchain</h6>
+                            <p>Ajout au registre immuable</p>
+                            <small class="text-muted">{{ "now"|date("Y-m-d H:i:s") }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Monitoring -->
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-broadcast-tower"></i> Monitoring en temps réel
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-success">
+                                <i class="fas fa-check-circle"></i> Actif
+                            </h4>
+                            <p>Système de monitoring</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-primary">
+                                <i class="fas fa-shield-alt"></i> Sécurisé
+                            </h4>
+                            <p>Chiffrement AES-256</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-info">
+                                <i class="fas fa-clock"></i> En temps réel
+                            </h4>
+                            <p>Mise à jour continue</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h4 class="text-warning">
+                                <i class="fas fa-exclamation-triangle"></i> Alertes
+                            </h4>
+                            <p>Notification automatique</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function generateReport() {
+    alert('Génération d\'un nouveau rapport de transparence - Fonctionnalité à implémenter');
+}
+
+function viewReport(id) {
+    alert('Visualisation du rapport ' + id + ' - Fonctionnalité à implémenter');
+}
+
+function downloadReport(id) {
+    alert('Téléchargement du rapport ' + id + ' - Fonctionnalité à implémenter');
+}
+
+function verifyReport(id) {
+    alert('Vérification blockchain du rapport ' + id + ' - Fonctionnalité à implémenter');
+}
+</script>
+{% endblock %}

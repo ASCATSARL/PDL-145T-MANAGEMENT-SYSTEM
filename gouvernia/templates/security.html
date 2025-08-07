@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}PeaceNet - Sécurité et Cohésion Sociale{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-shield-alt"></i> PeaceNet
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button class="btn btn-sm btn-outline-warning" onclick="refreshAlerts()">
+                <i class="fas fa-sync-alt"></i> Actualiser
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Security Overview -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-globe"></i> Tableau de bord sécuritaire
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-danger">{{ alerts|length }}</h3>
+                            <p class="text-muted">Alertes actives</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-warning">{{ "{:.1f}".format(alerts|map(attribute='risk_score')|list|average) if alerts else 0 }}</h3>
+                            <p class="text-muted">Score de risque moyen</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-info">{{ alerts|selectattr('severity', 'equalto', 'high')|list|length }}</h3>
+                            <p class="text-muted">Alertes haut risque</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-center">
+                            <h3 class="text-success">{{ alerts|selectattr('province')|map(attribute='province')|unique|list|length }}</h3>
+                            <p class="text-muted">Provinces concernées</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Risk Map -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-map"></i> Carte des risques
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="riskMap" style="height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
+                    <div class="text-center">
+                        <i class="fas fa-map-marked-alt fa-3x mb-3"></i>
+                        <h4>Carte interactive des risques</h4>
+                        <p>Visualisation géospatiale des alertes de sécurité</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie"></i> Répartition par type
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="alertTypeChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Security Alerts -->
+<div class="row">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle"></i> Alertes de sécurité actives
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Type d'alerte</th>
+                                <th>Sévérité</th>
+                                <th>Province</th>
+                                <th>Territoire</th>
+                                <th>Score de risque</th>
+                                <th>Description</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alert in alerts %}
+                            <tr class="table-{{ 'danger' if alert.severity == 'high' else 'warning' if alert.severity == 'medium' else 'info' }}">
+                                <td>
+                                    <strong>{{ alert.alert_type }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if alert.severity == 'high' else 'warning' if alert.severity == 'medium' else 'info' }}">
+                                        {% if alert.severity == 'high' %}
+                                            <i class="fas fa-exclamation-triangle"></i> Élevé
+                                        {% elif alert.severity == 'medium' %}
+                                            <i class="fas fa-exclamation-circle"></i> Moyen
+                                        {% else %}
+                                            <i class="fas fa-info-circle"></i> Faible
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ alert.province }}</td>
+                                <td>{{ alert.territory or 'N/A' }}</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar bg-{{ 'danger' if alert.risk_score > 75 else 'warning' if alert.risk_score > 50 else 'info' }}" 
+                                             role="progressbar" 
+                                             style="width: {{ alert.risk_score }}%" 
+                                             aria-valuenow="{{ alert.risk_score }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="100">
+                                            {{ "{:.0f}".format(alert.risk_score) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ alert.description[:100] }}{% if alert.description|length > 100 %}...{% endif %}</td>
+                                <td>{{ alert.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-outline-primary" onclick="viewAlert({{ alert.id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-success" onclick="resolveAlert({{ alert.id }})">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-info" onclick="escalateAlert({{ alert.id }})">
+                                            <i class="fas fa-arrow-up"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Predictive Analysis -->
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-robot"></i> Analyse prédictive et prévention des conflits
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-line fa-2x mb-2"></i>
+                                <h5>Analyse de sentiments</h5>
+                                <p>Surveillance des réseaux sociaux</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-map-marked-alt fa-2x mb-2"></i>
+                                <h5>Analyse géospatiale</h5>
+                                <p>Cartographie des tensions</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-users fa-2x mb-2"></i>
+                                <h5>Analyse communautaire</h5>
+                                <p>Dynamics sociales et ethniques</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body text-center">
+                                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                                <h5>Système d'alerte précoce</h5>
+                                <p>Prévention des conflits</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Real-time Monitoring -->
+<div class="row mt-4">
+    <div class="col-lg-12">
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-broadcast-tower"></i> Monitoring en temps réel
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4 class="text-success">
+                                <i class="fas fa-satellite-dish"></i> Monitoring
+                            </h4>
+                            <p>Satellites et capteurs IoT</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4 class="text-info">
+                                <i class="fas fa-network-wired"></i> Réseaux sociaux
+                            </h4>
+                            <p>Analyse des tendances et sentiments</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <h4 class="text-warning">
+                                <i class="fas fa-mobile-alt"></i> Alertes mobiles
+                            </h4>
+                            <p>Notifications push aux autorités</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Alert type distribution chart
+const alertTypeCtx = document.getElementById('alertTypeChart').getContext('2d');
+const alertTypeData = {
+    labels: [{% for type in alerts|map(attribute='alert_type')|unique|list %}"{{ type }}"{% if not loop.last %},{% endif %}{% endfor %}],
+    datasets: [{
+        data: [{% for type in alerts|map(attribute='alert_type')|unique|list %}
+            {{ alerts|selectattr('alert_type', 'equalto', type)|list|length }}{% if not loop.last %},{% endif %}
+        {% endfor %}],
+        backgroundColor: ['#dc3545', '#fd7e14', '#ffc107', '#20c997', '#6f42c1']
+    }]
+};
+
+new Chart(alertTypeCtx, {
+    type: 'doughnut',
+    data: alertTypeData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false
+    }
+});
+
+function viewAlert(id) {
+    alert('Détails de l\'alerte ' + id + ' - Fonctionnalité à implémenter');
+}
+
+function resolveAlert(id) {
+    alert('Résolution de l\'alerte ' + id + ' - Fonctionnalité à implémenter');
+}
+
+function escalateAlert(id) {
+    alert('Escalade de l\'alerte ' + id + ' - Fonctionnalité à implémenter');
+}
+
+function refreshAlerts() {
+    location.reload();
+}
+</script>
+{% endblock %}

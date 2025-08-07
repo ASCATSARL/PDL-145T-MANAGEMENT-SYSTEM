@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord - GOUVERNIA{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-tachometer-alt"></i> Tableau de bord
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="refreshData()">
+                <i class="fas fa-sync-alt"></i> Actualiser
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Dashboard Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Budget Total
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ "{:,.0f}".format(total_budget) }} FC
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Budget Dépensé
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ "{:,.0f}".format(total_spent) }} FC
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Investissements
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ "{:,.0f}".format(total_investments) }} FC
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-industry fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Alertes Actives
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ total_alerts }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts and Tables -->
+<div class="row">
+    <!-- Budget Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-chart-pie"></i> Répartition budgétaire
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="budgetChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investment Chart -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">
+                    <i class="fas fa-chart-bar"></i> Investissements par secteur
+                </h6>
+            </div>
+            <div class="card-body">
+                <canvas id="investmentChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-info">
+                    <i class="fas fa-clock"></i> Transactions récentes
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th>Montant</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transaction in recent_transactions %}
+                            <tr>
+                                <td>{{ transaction.description[:50] }}{% if transaction.description|length > 50 %}...{% endif %}</td>
+                                <td>{{ "{:,.0f}".format(transaction.amount) }} FC</td>
+                                <td>{{ transaction.created_at.strftime('%d/%m/%Y') }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-warning">
+                    <i class="fas fa-industry"></i> Projets actifs
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Projet</th>
+                                <th>Province</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for investment in active_investments %}
+                            <tr>
+                                <td>{{ investment.project_name[:30] }}{% if investment.project_name|length > 30 %}...{% endif %}</td>
+                                <td>{{ investment.province }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if investment.status == 'completed' else 'warning' if investment.status == 'in_progress' else 'secondary' }}">
+                                        {{ investment.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">
+                    <i class="fas fa-bolt"></i> Actions rapides
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('budget') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-money-bill-wave"></i> Budget
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('investments') }}" class="btn btn-success w-100">
+                            <i class="fas fa-industry"></i> Investissements
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('transparency') }}" class="btn btn-info w-100">
+                            <i class="fas fa-eye"></i> Transparence
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <a href="{{ url_for('security') }}" class="btn btn-warning w-100">
+                            <i class="fas fa-shield-alt"></i> Sécurité
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Budget Chart
+const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+fetch('{{ url_for("api_budget_summary") }}')
+    .then(response => response.json())
+    .then(data => {
+        new Chart(budgetCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.map(d => d.sector),
+                datasets: [{
+                    data: data.map(d => d.allocated),
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    });
+
+// Investment Chart
+const investmentCtx = document.getElementById('investmentChart').getContext('2d');
+fetch('{{ url_for("api_investment_summary") }}')
+    .then(response => response.json())
+    .then(data => {
+        new Chart(investmentCtx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.sector),
+                datasets: [{
+                    label: 'Budget (FC)',
+                    data: data.map(d => d.total),
+                    backgroundColor: '#1cc88a'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+
+function refreshData() {
+    location.reload();
+}
+</script>
+{% endblock %}
