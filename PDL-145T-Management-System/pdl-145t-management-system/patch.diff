@@ -1,0 +1,138 @@
+[[PATCH-DIFF-COMPILED]]
+
+*** Begin Patch
+*** Add File: PDL-145T-Management-System/dashboard_visual.md
++# PDL-145T Dashboard Visualisations (Mermaid)
+
++Mermaid diagrams pour suivre l'état et les flux du projet Emilio (hybride LLM)
++
++## 1) Progression par US (planning MVP)
++```mermaid
++gantt
+
+• title Progression MVP PDL-145T - Emilio
+• dateFormat YYYY-MM-DD
+• axisFormat %Y-%m-%d
+• section US1: Auth
+• plan: 2026-02-28, 2026-03-15:done
+• section US2: Projects
+• implémentation: 2026-02-28, 2026-03-20:done
+• section US3: Progress
+• module: 2026-03-01, 2026-03-25:active
+• section US4: Finances
+• budgets: 2026-03-10, 2026-04-01:planned
++```
+• 
+
++## 2) Diagramme de flux LLM hybride (Cloud → Local)
++```mermaid
++flowchart TD
+
+• A[Demande d'analyse Inspection] --> B{Mode LLM}
+• B -->|hybrid| C[Essai Cloud Ollama]
+• C --> D{Succès?}
+• D -->|Oui| E[Retour Cloud]
+• D -->|Non| F[Fallback Local Ollama]
+• E --> H[Affichage Résultat Cloud]
+• F --> H
++ +
+• 
+
++## 3) Carte d’état rapide par US (statut)
++```mermaid
++graph LR
+
+• US1([US1: Auth]) --> US2([US2: Projects])
+• US2 --> US3([US3: Progress])
+• US3 --> US4([US4: Finances])
+• US4 --> US5([US5: QA/QC])
+• US5 --> US6([US6: GIS])
+• US6 --> US7([US7: Ingestion])
+• US7 --> US8([US8: LLM])
+• US8 --> US9([US9: Reports])
+• US9 --> US10([US10: GIS Spatial])
++ +
+• 
+
++## 4) Diagramme simple du flux d’intégration (architecture)
++```mermaid
++graph TD
+
+• FE[Frontend] --> API[Backend API (Express)]
+• API --> DB[(PostgreSQL + PostGIS)]
+• API --> LLM[LLM Service (Hybrid Cloud/Local)]
+• LLM --> CLOUD[(Ollama Cloud - gratuit)]
+• LLM --> LOCAL[(Ollama Local - fallback)]
+• CLOUD --> API
+• LOCAL --> API
++ +
+• 
+
++5) Lisez-moi rapide
++- Mermaid fonctionne dans les outils compatibles (GitHub, Notion, Obsidian, etc.). Pour générer des SVG localement: mermaid-cli.
++- Commande SVG: mmdc -i dashboard_visual.md -o dashboard_visual.svg
++
+*** End Patch
+*** Begin Patch
+*** Add File: PDL-145T-Management-System/dashboard_status.json
++{
+
+• "agent": "Emilio",
+• "branch": "MVP-OPENCLAW",
+• "last_updated": "2026-03-02T17:58:00+01:00",
+• "llm_config": {
+• "mode": "hybrid",
+• "primary": "ollama-cloud (free)",
+• "fallback": "ollama-local",
+• "budget_limit": 0
+• },
+• "progress": {
+• "us1_auth": "done",
+• "us2_projects": "done",
+• "us3_tasks": "done",
+• "us4_expenses": "done",
+• "us5_resources": "done",
+• "us6_measurements": "done",
+• "us7_territories": "done",
+• "us8_llm_hybrid": "integrated",
+• "us9_reports": "in_progress",
+• "us10_gis": "planned",
+• "us11_data_ingestion": "planned",
+• "us12_dashboard_kpis": "planned",
+• "us13_ci_cd": "planned",
+• "us14_openapi_docs": "planned"
+• },
+• "github_push": "pending",
+• "demos": [
+• "US1-US8 Endpoints",
+• "LLM Hybrid Switch (Cloud -> Local)"
+• ],
+• "visualisations": [
+• { "type": "markdown_mermaid", "path": "dashboard_visual.md", "description": "Mermaid visuals" }
+• ]
++}
+• 
+
+*** End Patch
+*** Begin Patch
+*** Add File: PDL-145T-Management-System/dashboard_visual_runbook.md
++# Runbook rapide: génération SVG Mermaid et intégration
++
++Objectif: générer des SVG à partir du dashboard_visual.md dès que nécessaire et les intégrer dans le dashboard.
++
++1) Pré-requis
++- Node.js et npm installés
++- Mermaid CLI: npm i -g @mermaid-js/mermaid-cli
++- Fichier dashboard_visual.md présent dans le chemin ci-dessous:
+
+• 
+  • PDL-145T-Management-System/dashboard_visual.md
+• 
+
++2) Génération SVG unique
++- Commande: mmdc -i PDL-145T-Management-System/dashboard_visual.md -o PDL-145T-Management-System/dashboard_visual.svg
++- Option: mmdc -i ... -o dashboard_visual.png -t neutral
++
++3) Watch (optionnel)
++- macOS: fswatch -o PDL-145T-Management-System/dashboard_visual.md | xargs -n1 -I{} sh -c 'mmdc -i PDL-145T-Management-System/dashboard_visual.md -o PDL-145T-Management-System/dashboard_visual.svg'
++- Linux: inotifywait -m -e close_write,modify --format '%w%f' PDL-145T-Management-System/dashboard_visual.md | while read f; do mmdc -i "$f" -o "${f%.md}.svg"; done
